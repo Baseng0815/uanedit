@@ -6,6 +6,8 @@
 //! saving a file that was not edited does not rewrite it.
 
 pub mod error;
+pub mod ids;
+pub mod nodeset;
 pub mod types;
 
 pub use error::ParseError;

@@ -10,6 +10,7 @@ pub mod extension_object;
 pub mod guid;
 pub mod localized_text;
 pub mod node_id;
+pub mod node_id_ref;
 pub mod qualified_name;
 pub mod status_code;
 pub mod variant;
@@ -30,6 +31,7 @@ pub use node_id::{
     NamespaceIndex,
     NodeId,
 };
+pub use node_id_ref::NodeIdRef;
 pub use qualified_name::QualifiedName;
 pub use status_code::{
     Severity,
