@@ -8,7 +8,9 @@
 pub mod attributes;
 pub mod error;
 pub mod ids;
+pub mod nodes;
 pub mod nodeset;
 pub mod types;
 
 pub use error::ParseError;
+pub use nodes::Node;
