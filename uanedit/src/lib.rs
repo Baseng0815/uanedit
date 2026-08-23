@@ -14,3 +14,4 @@ pub mod types;
 
 pub use error::ParseError;
 pub use nodes::Node;
+pub use nodeset::NodeSet;
