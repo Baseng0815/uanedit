@@ -18,6 +18,9 @@ repository = "https://github.com/bastianengel/uanedit"
 # `uanedit/xml` back on for the native side that reads and writes files.
 uanedit = { path = "uanedit", default-features = false }
 
+# ByteString identifiers and values are base64 in both the XML and the `b=` NodeId form. Small,
+# dependency-free, and builds for wasm.
+base64 = { version = "0.22", default-features = false, features = ["std"] }
 derive_more = { version = "2", features = ["display", "from", "into"] }
 # Pinned to the `dx` in the Nix dev shell — dioxus-cli and dioxus must agree.
 dioxus = "0.7.9"
