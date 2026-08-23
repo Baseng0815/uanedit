@@ -5,6 +5,7 @@
 //! schema permits more than one spelling of the same value, the spelling that was read is kept, so
 //! saving a file that was not edited does not rewrite it.
 
+pub mod attributes;
 pub mod error;
 pub mod ids;
 pub mod nodeset;
