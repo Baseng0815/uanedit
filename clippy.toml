@@ -1,0 +1,8 @@
+# Holding a signal borrow across an await deadlocks the signal: every later read
+# or write fails while the borrow is still active. Recommended by the dioxus
+# template and worth keeping.
+await-holding-invalid-types = [
+  { path = "generational_box::GenerationalRef", reason = "Reads must not be held over an await point; writes fail while the read borrow is active." },
+  { path = "generational_box::GenerationalRefMut", reason = "Writes must not be held over an await point; reads and writes fail while the write borrow is active." },
+  { path = "dioxus_signals::WriteLock", reason = "Writes must not be held over an await point; reads and writes fail while the write borrow is active." },
+]

@@ -1,0 +1,30 @@
+[package]
+name = "uanedit-web"
+description = "uanedit's web backend and frontend"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+dioxus = { workspace = true, features = ["fullstack", "router"] }
+serde = { workspace = true }
+
+# Both halves see the domain crate, so server functions take and return its
+# types directly — there is no DTO layer. Every type that crosses the wire
+# therefore needs `Serialize` and `Deserialize`.
+uanedit = { workspace = true }
+
+[features]
+default = ["web"]
+# Client half: compiled for wasm32-unknown-unknown by `dx serve`.
+web = ["dioxus/web"]
+# Server half: compiled natively, and the only side that touches the filesystem.
+server = [
+    "dioxus/server",
+    "uanedit/xml",
+]
+
+[lints]
+workspace = true

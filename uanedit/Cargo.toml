@@ -1,0 +1,27 @@
+[package]
+name = "uanedit"
+description = "OPC UA address space model, NodeSet2 codec, and editing operations"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+derive_more = { workspace = true }
+indexmap = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+
+# Optional so a dependent that only wants the model and the edit operations —
+# the browser half of `uanedit-web` holds an address space in memory and never
+# parses a file — does not pull the parser into its bundle.
+quick-xml = { workspace = true, optional = true }
+
+[features]
+default = ["xml"]
+# Reading and writing NodeSet2 XML. Off leaves the in-memory model only.
+xml = ["dep:quick-xml"]
+
+[lints]
+workspace = true

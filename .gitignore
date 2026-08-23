@@ -1,0 +1,23 @@
+/target
+# dioxus-cli build output
+/web/target
+/web/dist
+.dioxus/
+
+# direnv / nix
+.direnv/
+
+# playwright-mcp session output (snapshots, screenshots)
+.playwright-mcp/
+
+# rustfmt backups
+**/*.rs.bk
+
+# local environment overrides
+.env
+
+# the nodeset workspace `dx serve` opens by default
+/workspace/
+
+# claude code personal settings
+.claude/settings.local.json
