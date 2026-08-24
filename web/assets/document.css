@@ -53,6 +53,18 @@
     width: min(62rem, 100%);
 }
 
+/* Sized to the content up to a large cap, so a 19-line file is not a mostly
+   empty window and a 800-line one uses the screen. */
+.dialog.full {
+    width: min(84rem, 100%);
+    max-height: min(90vh, 68rem);
+}
+
+.dialog.full .dialog__body {
+    padding: 0;
+    overflow: hidden;
+}
+
 .dialog__head {
     display: flex;
     align-items: flex-start;
@@ -630,4 +642,127 @@
     display: flex;
     flex-direction: column;
     gap: var(--gap-md);
+}
+
+/* --------------------------------------------------------------------------
+   Export dialog
+   -------------------------------------------------------------------------- */
+
+.field__toggle.indented,
+.field__hint.indented {
+    padding-left: var(--gap-xl);
+}
+
+.field__toggle.muted .field__toggle-label {
+    color: color-mix(in srgb, var(--on-surface) 45%, transparent);
+}
+
+.export__files {
+    margin: 0;
+    padding-left: var(--gap-lg);
+    color: var(--on-surface-variant);
+    font-size: var(--type-label-small-size);
+    line-height: 1.7;
+}
+
+.export__files.nested {
+    color: color-mix(in srgb, var(--on-surface-variant) 75%, transparent);
+}
+
+.export__link {
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--primary);
+    font: inherit;
+    cursor: pointer;
+}
+
+.export__link:hover {
+    text-decoration: underline;
+}
+
+.export__raw {
+    display: inline-flex;
+    margin-left: var(--gap-xs);
+    color: var(--on-surface-variant);
+    vertical-align: middle;
+}
+
+.export__raw:hover {
+    color: var(--primary);
+}
+
+.export__raw .material-symbols-rounded.small {
+    font-size: 14px;
+}
+
+/* The highlighter brings its own colours; the scrolling is ours, because the
+   gutter has to stay put while the code moves under it sideways. One monospace
+   stack for both children, so a line box is the same height in each. */
+.preview {
+    display: flex;
+    align-items: stretch;
+    min-height: 0;
+    height: 100%;
+    overflow: auto;
+    background: var(--surface);
+    border-inline: 1px solid var(--outline-variant);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+.preview__gutter {
+    position: sticky;
+    left: 0;
+    /* Above the code, which is later in the DOM and would otherwise scroll
+       through the numbers rather than under them. */
+    z-index: 1;
+    flex: none;
+    margin: 0;
+    padding: var(--gap-md) var(--gap-sm);
+    border-right: 1px solid var(--outline-variant);
+    background: var(--surface);
+    color: color-mix(in srgb, var(--on-surface-variant) 60%, transparent);
+    font-family: inherit;
+    font-size: var(--preview-type-size, 12px);
+    line-height: 1.5;
+    text-align: right;
+    user-select: none;
+}
+
+/* Grows to fill a narrow file, never shrinks below a wide one — the scroll bar
+   belongs to `.preview`, so the code keeps its own width. */
+.preview .dxc {
+    flex: 1 0 auto;
+    overflow: visible;
+    border-radius: 0;
+    padding: var(--gap-md) var(--gap-xl);
+    font-size: var(--preview-type-size, 12px);
+    line-height: 1.5;
+}
+
+.preview__zoom {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-xs);
+    margin-right: auto;
+    color: var(--on-surface-variant);
+}
+
+.preview__zoom-size {
+    min-width: 4.5ch;
+    padding: 2px var(--gap-xs);
+    border: none;
+    border-radius: var(--shape-xs);
+    background: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.preview__zoom-size:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--on-surface) 8%, transparent);
+}
+
+.preview__zoom-size:disabled {
+    cursor: default;
 }

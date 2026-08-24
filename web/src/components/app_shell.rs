@@ -1,7 +1,9 @@
 use dioxus::prelude::*;
 
 use crate::components::{
+    ExportDialog,
     Icon,
+    Theme,
     ThemeToggle,
 };
 use crate::route::Route;
@@ -14,6 +16,7 @@ use crate::session::EditorHandle;
 #[component]
 pub fn AppShell() -> Element {
     let handle = use_context_provider(EditorHandle::new);
+    use_context_provider(|| Signal::new(Theme::default()));
 
     rsx! {
         div {
@@ -77,7 +80,9 @@ fn shortcut(
 fn TopAppBar() -> Element {
     let handle: EditorHandle = use_context();
     let open_file = use_open_file();
-    let loaded = handle.file.read().is_some();
+    let mut exporting = use_signal(|| false);
+    let document = handle.file.read().clone();
+    let loaded = document.is_some();
     let dirty = *handle.dirty.read();
     let busy = *handle.busy.read();
     let history = handle.history.read().clone();
@@ -132,8 +137,8 @@ fn TopAppBar() -> Element {
                 button {
                     class: "icon-button",
                     disabled: !loaded || busy,
-                    title: "Download the XML a save would write",
-                    onclick: move |_| handle.download(),
+                    title: "Export the XML, the open62541 C sources, or both",
+                    onclick: move |_| exporting.set(true),
                     Icon { name: "download" }
                 }
                 button {
@@ -145,6 +150,11 @@ fn TopAppBar() -> Element {
                     "Save"
                 }
                 ThemeToggle {}
+            }
+        }
+        if exporting() {
+            if let Some(file) = document {
+                ExportDialog { file, onclose: move |_: ()| exporting.set(false) }
             }
         }
     }

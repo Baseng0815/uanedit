@@ -1,0 +1,18 @@
+{
+  "reporters": ["ai"],
+  "format": ["bash", "docker", "python", "rust", "sql"],
+  "ignore": [
+    "**/.git/**",
+    "**/.idea/**",
+    "**/.venv/**",
+    "**/__pycache__/**",
+    "**/build/**",
+    "**/deps/open62541/**",
+    "**/dist/**",
+    "**/node_modules/**",
+    "**/src_generated/**",
+    "**/target/**"
+  ],
+  "minLines": 4,
+  "minTokens": 40
+}

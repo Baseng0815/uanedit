@@ -6,11 +6,17 @@ use crate::components::Icon;
 /// forcing a theme is one `data-theme` attribute on the root element, and following the system is
 /// its absence.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-enum Theme {
+pub enum Theme {
     #[default]
     System,
     Light,
     Dark,
+}
+
+/// The override the toggle holds, for the surfaces CSS alone cannot follow — a syntax theme is
+/// picked in Rust, so `prefers-color-scheme` would ignore a forced light on a dark system.
+pub fn use_theme() -> Signal<Theme> {
+    use_context()
 }
 
 /// Stamps a stored override before first paint, so a dark-mode reload never flashes light.
@@ -66,7 +72,7 @@ impl Theme {
 
 #[component]
 pub fn ThemeToggle() -> Element {
-    let mut theme = use_signal(Theme::default);
+    let mut theme = use_theme();
     use_future(move || async move {
         if let Ok(stored) = document::eval(READ_JS).await
             && let Some(parsed) = stored.as_str().and_then(Theme::from_stored)

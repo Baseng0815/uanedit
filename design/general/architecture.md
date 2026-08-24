@@ -146,5 +146,46 @@ diagnostics, is `guardrails.md`.
    file still have no conflict story — last save wins — and that is accepted
    for now rather than solved.
 4. **Generated code.** Nodeset editors are often paired with code generation
-   (C#/Rust types from a model). Out of scope, but the model should not
-   preclude it. **Still open.**
+   (C#/Rust types from a model). *Partly resolved 2026-08-24: the app bar's
+   Export dialog compiles the open file to an open62541 `.c`/`.h` pair and a
+   `.rs` wrapper, alongside the XML, delivered as separate downloads, one ZIP
+   built in the browser, or blob-URL links that open each file in a tab.* `uanedit::compile` mirrors the output of open62541 1.1's
+   `nodeset_compiler.py`, treating every dependency as `--existing`; it sits
+   outside the `xml` feature, so the browser generates and downloads the
+   files without a server round trip. ExtensionObject values compile to field
+   assignments only for the four `UA_TYPES` structures nodesets actually
+   carry (Argument, EnumValueType, Range, EUInformation); anything else
+   becomes `/* Cannot encode the value */`, matching the reference compiler's
+   non-encodable path. The `.rs` file wraps the pair's one exported symbol
+   for Rust servers built on `open62541-sys`: an extern declaration bound by
+   `#[link_name]` (so a keyword-shaped base name cannot break it), a safe
+   `insert(&mut UA_Server) -> Result<(), UA_StatusCode>` whose `&mut` puts
+   the pointer-validity obligation on the caller's safe code, and the
+   namespace URIs as a const. It targets the `-sys` crate because the safe
+   `open62541` crate (0.12) exposes no raw `*mut UA_Server`, and its docs
+   carry the build recipe — `open62541-sys` exports no `DEP_*` include path,
+   so the user's build script hands `cc` matching headers itself. NodeIds
+   come out as constants on both sides of the language line: the header
+   carries one `#define UA_<BASE>ID_<NAME>` per primary node in the shape
+   open62541's `generate_nodeid_header.py` writes (string identifiers as C
+   string literals, the node class and namespace index in the trailing
+   comment), and the `.rs` carries a `node_ids` module — one constant per
+   primary node, spelled with the file's namespace index. Ready-made NodeId
+   values ride on the namespace mapping the initialiser builds anyway: the
+   `ns[]` array is the exported global `<base>_ns`, the header declares it
+   and derives one `UA_<BASE>ID_<NAME>_NODEID` macro per node expanding to
+   `UA_NODEID_NUMERIC`/`UA_NODEID_STRING` over it, and the `.rs` binds the
+   same symbol behind `namespace_indexes()` and a `NodeId::ua(self)` method
+   producing the `open62541_sys::UA_NodeId` — all zeros, by C static
+   storage, until the initialiser ran. The `.rs` adds a `data_types` module
+   with the primary DataTypeDefinitions
+   as plain Rust: enumerations as `#[repr(i32)]` enums with `TryFrom<i32>`,
+   structures with the supertype chain's fields flattened in first (a
+   Definition never repeats inherited fields, OPC 10000-6 F.12), unions as
+   enums with a `Null` variant, OptionSets as newtypes over the unsigned
+   width they subtype, and hand-written support types (LocalizedText,
+   NodeId, DiagnosticInfo, …) emitted only when referenced. A type whose
+   field has no Rust form — Variant, abstract, subtype-open — is skipped
+   with a comment naming the field, and everything depending on it follows.
+   C# and open62541's `UA_DataType` descriptor registration remain out of
+   scope. **Still open** for those targets.

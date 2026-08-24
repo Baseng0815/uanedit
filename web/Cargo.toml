@@ -16,6 +16,24 @@ serde = { workspace = true }
 # therefore needs `Serialize` and `Deserialize`.
 uanedit = { workspace = true }
 
+# The export dialog's archive, built in the browser: `zip` for the container
+# and `base64` to hand the bytes to a blob URL, since an eval channel is JSON
+# and a byte array would cost four characters a byte. Default features off
+# keeps the encrypted and non-deflate codecs out of the bundle.
+base64 = { workspace = true }
+zip = { version = "8", default-features = false, features = ["deflate"] }
+
+# Syntax highlighting for the export preview. `default-features = false` drops
+# the compile-time `code!` macro we have no use for — every file we show is
+# generated at runtime — and each `lang-*` pulls one tree-sitter grammar;
+# `runtime` comes with them and carries Rust, so the three we render are the
+# three we ask for. The grammars are C, which is what `flake.nix` subtracts two
+# hardening flags for.
+dioxus-code = { version = "0.1", default-features = false, features = [
+    "lang-c",
+    "lang-xml",
+] }
+
 # The filesystem side only, so neither ends up in the browser bundle.
 serde_json = { workspace = true, optional = true }
 similar = { workspace = true, optional = true }

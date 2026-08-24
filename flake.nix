@@ -79,6 +79,19 @@
 
         # Single knob for the shell's LLVM/clang version (stdenv, tools).
         llvmPackages = pkgs.llvmPackages;
+
+        # `dioxus-code`'s tree-sitter grammars are C, compiled for
+        # wasm32-unknown-unknown against the sysroot `arborium-sysroot` ships.
+        # Three of nixpkgs's default hardening flags do not survive that
+        # target: two are x86 codegen options clang rejects outright, and the
+        # stack protector emits `__stack_chk_*` calls the sysroot has no
+        # definitions for. Subtracting keeps the rest on, and tracks nixpkgs
+        # rather than pinning a list that would drift.
+        wasmHardening = pkgs.lib.subtractLists [
+          "stackclashprotection"
+          "stackprotector"
+          "zerocallusedregs"
+        ] llvmPackages.stdenv.cc.defaultHardeningFlags;
       in
       {
         devShells.default = (pkgs.mkShell.override { stdenv = llvmPackages.stdenv; }) {
@@ -110,6 +123,8 @@
           buildInputs = with pkgs; [
             openssl
           ];
+
+          NIX_HARDENING_ENABLE = pkgs.lib.concatStringsSep " " wasmHardening;
 
           shellHook = ''
             mkdir -p ~/.rust-rover/toolchain

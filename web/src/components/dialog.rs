@@ -20,16 +20,25 @@ pub fn Dialog(
     title: String,
     icon: &'static str,
     #[props(default)] wide: bool,
+    /// Widest, and its body is the surface itself: no padding, for content that brings its own.
+    #[props(default)]
+    full: bool,
     subtitle: Option<String>,
     onclose: EventHandler<()>,
     actions: Option<Element>,
     children: Element,
 ) -> Element {
+    let size = match (full, wide) {
+        (true, _) => "dialog full",
+        (false, true) => "dialog wide",
+        (false, false) => "dialog",
+    };
+
     rsx! {
         DocumentStyles {}
         div { class: "dialog-scrim", onclick: move |_| onclose.call(()),
             div {
-                class: if wide { "dialog wide" } else { "dialog" },
+                class: size,
                 onclick: move |event| event.stop_propagation(),
                 header { class: "dialog__head",
                     Icon { name: icon }

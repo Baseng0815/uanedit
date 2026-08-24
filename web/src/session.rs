@@ -28,6 +28,12 @@ use crate::api::{
     render_file,
     save_file,
 };
+use crate::export::{
+    self,
+    Bundle,
+    CompileCounts,
+    ExportRequest,
+};
 
 /// The handle every part of the editor shares, provided by the app shell so the top app bar can
 /// reach the same document the routed view fills.
@@ -249,38 +255,81 @@ impl EditorHandle {
         });
     }
 
-    /// Hands the browser the text a save would write, as a file download.
-    pub fn download(self) {
-        if *self.busy.peek() {
+    /// Hands the browser what the request asked for: the XML a save would write, the open62541 C
+    /// pair, the Rust wrapper over it, as separate downloads or as one archive.
+    ///
+    /// The XML is rendered by the server, which holds the bytes it splices into; the code is
+    /// compiled here, so asking for neither costs nothing and asking for XML alone never walks
+    /// the address space.
+    ///
+    /// On the root scope, because the export dialog closes in the same update that starts this,
+    /// and a task belonging to a scope that is going away is cancelled.
+    pub fn export(
+        self,
+        request: ExportRequest,
+    ) {
+        if *self.busy.peek() || request.is_empty() {
             return;
         }
         let Some(name) = self.file.peek().clone() else {
             return;
         };
-        let Some(nodeset) = self
-            .session
-            .read()
-            .as_ref()
-            .map(|session| session.primary().clone())
-        else {
-            return;
+        spawn_forever(async move {
+            let bundle = match self.collect(request).await {
+                Ok(bundle) if bundle.files.is_empty() => return,
+                Ok(bundle) => bundle,
+                Err(error) => return self.announce(Status::error(format!("Export failed: {error}"))),
+            };
+            let names: Vec<String> = bundle.files.iter().map(|(name, _)| name.clone()).collect();
+            let archive = request.archive.then(|| export::archive_name(&name));
+            match export::deliver(bundle.files, archive.clone()) {
+                Ok(()) => self.announce(Status::success(exported(archive, &names, bundle.compiled))),
+                Err(error) => self.announce(Status::error(format!("Export failed: {error}"))),
+            }
+        });
+    }
+
+    /// Renders and compiles what the request asks for, in the order the dialog lists it. What
+    /// happens to the files afterwards — saved, archived, or put behind a link — is the caller's.
+    pub async fn collect(
+        self,
+        request: ExportRequest,
+    ) -> Result<Bundle, String> {
+        let Some(name) = self.file.peek().clone() else {
+            return Ok(Bundle::default());
         };
-        spawn(async move {
+        let nodeset = match request.xml {
+            true => self
+                .session
+                .read()
+                .as_ref()
+                .map(|session| session.primary().clone()),
+            false => None,
+        };
+        let compiled = match request.c_sources {
+            true => self.with_space(|space| uanedit::compile::open62541(space, &name)),
+            false => None,
+        };
+        let mut files = Vec::new();
+        if let Some(nodeset) = nodeset {
             let mut busy = self.busy;
             busy.set(true);
             let rendered = render_file(name.clone(), nodeset).await;
             busy.set(false);
-            let sent = match rendered {
-                Ok(text) => document::eval(DOWNLOAD_JS)
-                    .send((name.as_str(), text.as_str()))
-                    .map_err(|error| error.to_string()),
-                Err(error) => Err(error.to_string()),
-            };
-            match sent {
-                Ok(()) => self.announce(Status::success(format!("Downloaded {name}"))),
-                Err(error) => self.announce(Status::error(format!("Download failed: {error}"))),
+            files.push((name, rendered.map_err(|error| error.to_string())?));
+        }
+        let compiled = compiled.map(|compiled| {
+            files.push((format!("{}.c", compiled.base), compiled.source));
+            files.push((format!("{}.h", compiled.base), compiled.header));
+            if request.rust_bindings {
+                files.push((format!("{}.rs", compiled.base), compiled.wrapper));
+            }
+            CompileCounts {
+                nodes: compiled.nodes,
+                skipped: compiled.skipped,
             }
         });
+        Ok(Bundle { files, compiled })
     }
 
     /// The minimal diff the save would make against the bytes on disk (features.md §2E).
@@ -417,16 +466,35 @@ impl Status {
 
 const STATUS_MILLIS: u32 = 5000;
 
-/// Receives `(name, text)` and clicks a blob URL, which is how a browser is asked to save a file.
-const DOWNLOAD_JS: &str = r#"
-    const [name, text] = await dioxus.recv();
-    const url = URL.createObjectURL(new Blob([text], { type: "application/xml" }));
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = name;
-    anchor.click();
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-"#;
+/// What the app bar says an export produced, with the compile's own counts when it ran.
+fn exported(
+    archive: Option<String>,
+    names: &[String],
+    compiled: Option<CompileCounts>,
+) -> String {
+    let mut message = match (archive, names) {
+        (Some(archive), names) => format!("Exported {archive} · {}", plural(names.len(), "file")),
+        (None, [only]) => format!("Downloaded {only}"),
+        (None, names) => format!("Downloaded {}", plural(names.len(), "file")),
+    };
+    if let Some(compiled) = compiled {
+        message.push_str(&format!(" · {}", plural(compiled.nodes, "node")));
+        if compiled.skipped > 0 {
+            message.push_str(&format!(", {} skipped", compiled.skipped));
+        }
+    }
+    message
+}
+
+fn plural(
+    count: usize,
+    noun: &str,
+) -> String {
+    match count {
+        1 => format!("1 {noun}"),
+        count => format!("{count} {noun}s"),
+    }
+}
 
 use uanedit::edit::delete::{
     DeleteNode,

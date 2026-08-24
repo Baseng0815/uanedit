@@ -3,6 +3,8 @@
 mod app_shell;
 mod create_file;
 mod dialog;
+mod export_dialog;
+mod file_preview;
 mod icon;
 mod pane;
 mod theme;
@@ -13,7 +15,16 @@ pub use dialog::{
     Dialog,
     DocumentStyles,
 };
+pub use export_dialog::ExportDialog;
+pub use file_preview::{
+    DEFAULT_ZOOM,
+    FilePreview,
+};
 pub use icon::Icon;
 #[allow(unused_imports, reason = "the placeholder pane outlives the views that used it")]
 pub use pane::Pane;
-pub use theme::ThemeToggle;
+pub use theme::{
+    Theme,
+    ThemeToggle,
+    use_theme,
+};

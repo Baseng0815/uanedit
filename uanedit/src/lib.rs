@@ -6,6 +6,7 @@
 //! saving a file that was not edited does not rewrite it.
 
 pub mod attributes;
+pub mod compile;
 pub mod edit;
 pub mod emit;
 pub mod error;

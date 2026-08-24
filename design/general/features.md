@@ -97,9 +97,21 @@ namespace indexes *inside* values point at the file's own tables.
 - **Diff preview before save** — we hold the loaded bytes and the would-be
   output; showing the minimal diff is nearly free and is the invariant as a
   feature.
-- **Download** *(added 2026-08-24)* — the same would-be output handed to the
-  browser as a file, unsaved edits included, nothing written to disk. Exists
-  because a web deployment's workspace directory is the server's.
+- **Export** *(added 2026-08-24)* — one dialog over everything that leaves the
+  editor: the same would-be output handed to the browser as a file, unsaved
+  edits included, nothing written to disk, and the generated open62541 C pair
+  and Rust bindings beside it, as separate downloads or one ZIP. Exists because
+  a web deployment's workspace directory is the server's. It defaults to the
+  XML alone, as its own file — compiling the code walks the whole address
+  space, so an export that was not asked for it does not pay for it. **View**
+  is the same generation without the saving: every file becomes readable two
+  ways — its name opens a syntax-highlighted preview in the app
+  (`dioxus-code`, one tree-sitter grammar per language we generate), the arrow
+  beside it opens the raw text in a tab from a blob URL. Handing back a URL
+  rather than opening it keeps the click a user gesture, which is what a popup
+  blocker looks for; the preview stops at 800 lines, because the highlighter
+  emits one element per token and a 14000-line compile would be a DOM the
+  dialog cannot afford.
 - **Open-file report**: what was loaded, what was preserved-but-unknown
   (foreign extensions, newer-schema attributes), what failed and why. Opaque
   import errors are an unserved complaint across the field.

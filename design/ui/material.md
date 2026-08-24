@@ -82,13 +82,24 @@ save state, panes below. Nothing about this is settled.
 present and disabled — validation lives in the editor's right pane, so the
 destination is a placeholder rather than a duplicate. The app bar carries the
 brand, the open file with a dirty dot, a transient status message, the
-undo / redo / diff / download / save actions, and the theme selector. Download
+undo / redo / diff / export / save actions, and the theme selector. Export
 exists because the editor is deployed on the web where the workspace directory
-is the server's: it renders the XML a save would write — unsaved edits
-included, nothing touching disk — and hands it to the browser as a file. The three panes are address-space tree,
+is the server's: it is one action opening a dialog that picks the contents —
+the XML a save would write, the open62541 C pair, the Rust bindings over it —
+and the delivery, separate files or one ZIP. Its file list doubles as the
+preview: View generates the files, after which a name opens a highlighted
+preview dialog over the export and the arrow beside it opens the raw text in a
+tab. That dialog is the one `full` variant — widest, no body padding, the code
+on the surface itself rather than in a bordered box inside it, and sized to its
+content up to a cap so a nineteen-line file is not a mostly empty window. Type
+size is a control rather than a constant: 12px by default, 9 to 22 from the
+zoom cluster, held by the export dialog so it survives switching between files.
+The syntax theme is chosen in Rust from the app's own override rather than
+`prefers-color-scheme`, so a light theme forced on a dark system does not leave
+a dark code block behind. Nothing touches disk. The three panes are address-space tree,
 inspector, and a tabbed right pane (References, Validation); the open-file
-report, the diff preview, the version nudge and the wizards are dialogs over
-them rather than a fourth pane.
+report, the diff preview, the version nudge, the export dialog and the wizards
+are dialogs over them rather than a fourth pane.
 
 ## 4. Color as meaning
 

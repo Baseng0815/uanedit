@@ -20,6 +20,8 @@ describes code you can read.
 
 Development happens inside the Nix dev shell (`nix develop`, or `direnv allow` once), which provides the nightly toolchain with the `wasm32-unknown-unknown` target, `dx` (dioxus-cli 0.7.9), and a `wasm-bindgen-cli` matching the `wasm-bindgen` version `Cargo.lock` pins — the flake builds 0.2.127 itself and puts it ahead of the one nixpkgs's `dx` wrapper appends, because wasm-bindgen aborts when the two disagree. Bumping `wasm-bindgen` means bumping `wasmBindgenVersion` and both hashes in `flake.nix`; the flake warns when they drift.
 
+The shell also subtracts three hardening flags from nixpkgs's default set (`NIX_HARDENING_ENABLE` in `flake.nix`): the export preview's syntax highlighter compiles tree-sitter grammars from C for wasm32, and those three do not survive that target. `web/build.rs` names the wasm libc those grammars link against, for the same reason. Both carry the explanation inline. Changing either means rebuilding the C: `cargo clean -p arborium-sysroot -p arborium-tree-sitter …`, because `cc` does not track the environment that produced its objects.
+
 - Run the app (builds both halves, hot-reloads): `cd web && dx serve`
 - Type-check: `cargo check --workspace`
 - Check the server half of `web`: `cargo check -p uanedit-web --no-default-features --features server`
