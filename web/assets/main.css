@@ -173,6 +173,16 @@
        right pane hides below 1100px, panes stack below 760px. */
 }
 
+/* The in-app theme override; without it the system decides. Every color is a
+   light-dark() pair, so flipping color-scheme flips the whole theme. */
+:root[data-theme="light"] {
+    color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+}
+
 /* --------------------------------------------------------------------------
    Base
    -------------------------------------------------------------------------- */

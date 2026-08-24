@@ -26,6 +26,7 @@ pub use document::{
     create_file,
     diff_preview,
     open_file,
+    render_file,
     save_acknowledgements,
     save_file,
 };

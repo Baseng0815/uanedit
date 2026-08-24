@@ -25,6 +25,7 @@ use crate::api::{
     OpenedFile,
     VersionNudge,
     diff_preview,
+    render_file,
     save_file,
 };
 
@@ -248,6 +249,40 @@ impl EditorHandle {
         });
     }
 
+    /// Hands the browser the text a save would write, as a file download.
+    pub fn download(self) {
+        if *self.busy.peek() {
+            return;
+        }
+        let Some(name) = self.file.peek().clone() else {
+            return;
+        };
+        let Some(nodeset) = self
+            .session
+            .read()
+            .as_ref()
+            .map(|session| session.primary().clone())
+        else {
+            return;
+        };
+        spawn(async move {
+            let mut busy = self.busy;
+            busy.set(true);
+            let rendered = render_file(name.clone(), nodeset).await;
+            busy.set(false);
+            let sent = match rendered {
+                Ok(text) => document::eval(DOWNLOAD_JS)
+                    .send((name.as_str(), text.as_str()))
+                    .map_err(|error| error.to_string()),
+                Err(error) => Err(error.to_string()),
+            };
+            match sent {
+                Ok(()) => self.announce(Status::success(format!("Downloaded {name}"))),
+                Err(error) => self.announce(Status::error(format!("Download failed: {error}"))),
+            }
+        });
+    }
+
     /// The minimal diff the save would make against the bytes on disk (features.md §2E).
     pub fn preview(self) {
         if *self.busy.peek() {
@@ -381,6 +416,17 @@ impl Status {
 }
 
 const STATUS_MILLIS: u32 = 5000;
+
+/// Receives `(name, text)` and clicks a blob URL, which is how a browser is asked to save a file.
+const DOWNLOAD_JS: &str = r#"
+    const [name, text] = await dioxus.recv();
+    const url = URL.createObjectURL(new Blob([text], { type: "application/xml" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = name;
+    anchor.click();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+"#;
 
 use uanedit::edit::delete::{
     DeleteNode,

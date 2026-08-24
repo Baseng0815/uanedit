@@ -1,6 +1,9 @@
 use dioxus::prelude::*;
 
-use crate::components::Icon;
+use crate::components::{
+    Icon,
+    ThemeToggle,
+};
 use crate::route::Route;
 use crate::session::EditorHandle;
 
@@ -127,6 +130,13 @@ fn TopAppBar() -> Element {
                     Icon { name: "difference" }
                 }
                 button {
+                    class: "icon-button",
+                    disabled: !loaded || busy,
+                    title: "Download the XML a save would write",
+                    onclick: move |_| handle.download(),
+                    Icon { name: "download" }
+                }
+                button {
                     class: "button tonal",
                     disabled: !loaded || busy,
                     title: "Save (Ctrl+S)",
@@ -134,6 +144,7 @@ fn TopAppBar() -> Element {
                     Icon { name: "save", class: "small" }
                     "Save"
                 }
+                ThemeToggle {}
             }
         }
     }

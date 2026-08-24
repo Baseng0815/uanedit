@@ -12,7 +12,7 @@ settled.
 | -------------- | ----------------------------------------------------------------- |
 | Design system  | Material 3, hand-written                                           |
 | Implementation | Custom properties in `web/assets/main.css`; no component library    |
-| Themes         | Light + dark via `light-dark()` on `color-scheme: light dark`, following the system; no in-app toggle |
+| Themes         | Light + dark via `light-dark()` on `color-scheme: light dark`, following the system by default. *Revised 2026-08-24:* an in-app selector after all — an app-bar button cycling system → light → dark, persisted in `localStorage` and applied as a `data-theme` attribute that overrides `color-scheme` |
 | Type           | Roboto (variable), self-hosted                                      |
 | Icons          | Material Symbols Rounded (variable), self-hosted                    |
 
@@ -81,8 +81,11 @@ save state, panes below. Nothing about this is settled.
 **As built.** Exactly that. The rail holds Files, with Validation and Settings
 present and disabled — validation lives in the editor's right pane, so the
 destination is a placeholder rather than a duplicate. The app bar carries the
-brand, the open file with a dirty dot, a transient status message, and the
-undo / redo / diff / save actions. The three panes are address-space tree,
+brand, the open file with a dirty dot, a transient status message, the
+undo / redo / diff / download / save actions, and the theme selector. Download
+exists because the editor is deployed on the web where the workspace directory
+is the server's: it renders the XML a save would write — unsaved edits
+included, nothing touching disk — and hands it to the browser as a file. The three panes are address-space tree,
 inspector, and a tabbed right pane (References, Validation); the open-file
 report, the diff preview, the version nudge and the wizards are dialogs over
 them rather than a fourth pane.

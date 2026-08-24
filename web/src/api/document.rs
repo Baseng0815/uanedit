@@ -154,6 +154,21 @@ pub async fn save_file(
     documents::save(&name, &nodeset).map_err(ServerFnError::new)
 }
 
+/// The text a save would write, for the download button — deployed on the web, the workspace
+/// directory is the server's, so this is how a file leaves it.
+#[server]
+#[middleware(dioxus::server::axum::extract::DefaultBodyLimit::max(BODY_LIMIT))]
+pub async fn render_file(
+    name: String,
+    nodeset: NodeSet,
+) -> ServerFnResult<String> {
+    use dioxus::prelude::ServerFnError;
+
+    use crate::server::documents;
+
+    documents::render(&name, &nodeset).map_err(ServerFnError::new)
+}
+
 #[server]
 #[middleware(dioxus::server::axum::extract::DefaultBodyLimit::max(BODY_LIMIT))]
 pub async fn diff_preview(

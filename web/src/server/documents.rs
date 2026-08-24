@@ -132,6 +132,19 @@ pub fn save(
     })
 }
 
+/// The text a save would write, without writing it.
+pub fn render(
+    name: &str,
+    nodeset: &NodeSet,
+) -> Result<String, ServerError> {
+    let name = workspace::file_name(name)?;
+    let registry = registry()?;
+    let open = registry
+        .get(&name)
+        .ok_or_else(|| ServerError::NotOpen(name.clone()))?;
+    Ok(open.document.write_nodeset(nodeset))
+}
+
 pub fn diff(
     name: &str,
     nodeset: &NodeSet,

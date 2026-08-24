@@ -97,6 +97,9 @@ namespace indexes *inside* values point at the file's own tables.
 - **Diff preview before save** — we hold the loaded bytes and the would-be
   output; showing the minimal diff is nearly free and is the invariant as a
   feature.
+- **Download** *(added 2026-08-24)* — the same would-be output handed to the
+  browser as a file, unsaved edits included, nothing written to disk. Exists
+  because a web deployment's workspace directory is the server's.
 - **Open-file report**: what was loaded, what was preserved-but-unknown
   (foreign extensions, newer-schema attributes), what failed and why. Opaque
   import errors are an unserved complaint across the field.
