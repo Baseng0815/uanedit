@@ -29,6 +29,32 @@ pub struct NodeSet {
 }
 
 impl NodeSet {
+    /// Builds a nodeset from its tables and a sequence of nodes, which keep the order they arrive
+    /// in — the map they go into is keyed by NodeId, so a caller would otherwise key them by hand.
+    pub fn from_parts(
+        last_modified: Option<DateTime>,
+        namespaces: NamespaceTable,
+        server_uris: Vec<String>,
+        models: Vec<ModelTableEntry>,
+        aliases: AliasTable,
+        extensions: Vec<XmlElement>,
+        nodes: impl IntoIterator<Item = Node>,
+    ) -> Self {
+        let mut nodeset = Self {
+            last_modified,
+            namespaces,
+            server_uris,
+            models,
+            aliases,
+            extensions,
+            nodes: IndexMap::new(),
+        };
+        for node in nodes {
+            nodeset.insert(node);
+        }
+        nodeset
+    }
+
     pub fn node(
         &self,
         node_id: &NodeId,

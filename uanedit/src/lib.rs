@@ -6,12 +6,29 @@
 //! saving a file that was not edited does not rewrite it.
 
 pub mod attributes;
+pub mod edit;
+pub mod emit;
 pub mod error;
 pub mod ids;
 pub mod nodes;
 pub mod nodeset;
+pub mod report;
+pub mod rules;
+pub mod space;
 pub mod types;
+#[cfg(feature = "xml")]
+pub mod xml;
 
-pub use error::ParseError;
+pub use edit::{
+    Operation,
+    Session,
+};
+pub use error::{
+    DocumentError,
+    ParseError,
+};
 pub use nodes::Node;
 pub use nodeset::NodeSet;
+pub use space::AddressSpace;
+#[cfg(feature = "xml")]
+pub use xml::Document;

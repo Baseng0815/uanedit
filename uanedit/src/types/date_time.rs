@@ -50,6 +50,15 @@ impl DateTime {
         Self { ticks, lexical: None }
     }
 
+    /// From seconds since the Unix epoch, which is what a caller with a clock has.
+    pub fn from_unix_seconds(seconds: i64) -> Self {
+        Self::from_ticks(
+            seconds
+                .saturating_add(EPOCH_OFFSET_DAYS * 86_400)
+                .saturating_mul(TICKS_PER_SECOND),
+        )
+    }
+
     pub fn ticks(&self) -> i64 {
         self.ticks
     }
@@ -131,9 +140,13 @@ impl fmt::Display for DateTime {
             return f.write_str(lexical);
         }
         let (year, month, day, hour, minute, second, fraction) = self.parts();
+        if year < 0 {
+            f.write_str("-")?;
+        }
+        let year = year.unsigned_abs();
         write!(f, "{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}")?;
         if fraction != 0 {
-            write!(f, ".{:07}", fraction)?;
+            write!(f, ".{fraction:07}")?;
         }
         f.write_str("Z")
     }
@@ -184,21 +197,22 @@ impl FromStr for DateTime {
             return Err(invalid());
         }
 
-        let ticks = (days_from_civil(year, month, day) + EPOCH_OFFSET_DAYS) * TICKS_PER_DAY
-            + hour * TICKS_PER_HOUR
-            + minute * TICKS_PER_MINUTE
-            + second * TICKS_PER_SECOND
-            + fraction
+        let days = days_from_civil(year.into(), month.into(), day.into()) + i128::from(EPOCH_OFFSET_DAYS);
+        let ticks = days * i128::from(TICKS_PER_DAY)
+            + i128::from(hour) * i128::from(TICKS_PER_HOUR)
+            + i128::from(minute) * i128::from(TICKS_PER_MINUTE)
+            + i128::from(second) * i128::from(TICKS_PER_SECOND)
+            + i128::from(fraction)
             - offset;
         Ok(Self {
-            ticks,
+            ticks: i64::try_from(ticks).map_err(|_| invalid())?,
             lexical: Some(text.into()),
         })
     }
 }
 
 /// Splits a time from its trailing zone designator, returning the offset in ticks.
-fn split_offset(rest: &str) -> Option<(&str, i64)> {
+fn split_offset(rest: &str) -> Option<(&str, i128)> {
     if let Some(time) = rest.strip_suffix('Z') {
         return Some((time, 0));
     }
@@ -206,7 +220,8 @@ fn split_offset(rest: &str) -> Option<(&str, i64)> {
     let (time, zone) = rest.split_at(split);
     let (sign, zone) = zone.split_at(1);
     let (hour, minute) = zone.split_once(':')?;
-    let offset = hour.parse::<i64>().ok()? * TICKS_PER_HOUR + minute.parse::<i64>().ok()? * TICKS_PER_MINUTE;
+    let offset = i128::from(hour.parse::<i64>().ok()?) * i128::from(TICKS_PER_HOUR)
+        + i128::from(minute.parse::<i64>().ok()?) * i128::from(TICKS_PER_MINUTE);
     Some((time, if sign == "-" { -offset } else { offset }))
 }
 
@@ -226,11 +241,13 @@ fn parse_fraction(digits: &str) -> Option<i64> {
     Some(ticks)
 }
 
+/// Wider than the tick scale it feeds, so a year no `DateTime` can hold is an error rather than an
+/// overflow.
 fn days_from_civil(
-    year: i64,
-    month: i64,
-    day: i64,
-) -> i64 {
+    year: i128,
+    month: i128,
+    day: i128,
+) -> i128 {
     let year = if month <= 2 { year - 1 } else { year };
     let era = if year >= 0 { year } else { year - 399 } / 400;
     let year_of_era = year - era * 400;

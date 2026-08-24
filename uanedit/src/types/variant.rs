@@ -18,7 +18,7 @@ use crate::types::status_code::StatusCode;
 use crate::types::xml::XmlElement;
 
 /// A value of any built-in type, scalar or array (OPC 10000-6 §5.2.2.16).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub enum Variant {
     #[default]
     Null,
@@ -31,8 +31,8 @@ pub enum Variant {
     UInt32(u32),
     Int64(i64),
     UInt64(u64),
-    Float(f32),
-    Double(f64),
+    Float(#[serde(with = "crate::types::real::float")] f32),
+    Double(#[serde(with = "crate::types::real::double")] f64),
     String(String),
     DateTime(DateTime),
     Guid(Guid),
@@ -69,6 +69,33 @@ pub struct VariantMatrix {
     /// Set when the document wrote `Elements` before `Dimensions`, as stacks before 1.5.378 did
     /// and no reader tolerates transposed.
     pub elements_first: bool,
+}
+
+macro_rules! variant_eq {
+    ($($variant:ident),* $(,)?) => {
+        /// The float arms compare bit patterns, because a nodeset may hold NaN and a value that
+        /// does not equal itself would make the writer rewrite that node on every save.
+        impl PartialEq for Variant {
+            fn eq(
+                &self,
+                other: &Self,
+            ) -> bool {
+                match (self, other) {
+                    (Self::Null, Self::Null) => true,
+                    (Self::Float(left), Self::Float(right)) => left.to_bits() == right.to_bits(),
+                    (Self::Double(left), Self::Double(right)) => left.to_bits() == right.to_bits(),
+                    $((Self::$variant(left), Self::$variant(right)) => left == right,)*
+                    _ => false,
+                }
+            }
+        }
+    };
+}
+
+variant_eq! {
+    Boolean, SByte, Byte, Int16, UInt16, Int32, UInt32, Int64, UInt64, String, DateTime, Guid, ByteString,
+    XmlElement, NodeId, ExpandedNodeId, StatusCode, QualifiedName, LocalizedText, ExtensionObject, DataValue,
+    Variant, DiagnosticInfo, Array, Matrix, Raw,
 }
 
 impl Variant {

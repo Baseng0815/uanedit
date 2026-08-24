@@ -1,0 +1,633 @@
+/* ==========================================================================
+   uanedit — the document-level surface: dialogs, the open-file status row,
+   the namespace / model / alias tables, the diff preview and the open report.
+   Tokens come from main.css; only diff tints are new, and they are their own
+   muted family so they never read as validation severity.
+   ========================================================================== */
+
+:root {
+    /* Deliberately not --error / --warning: a removed line is not an error. */
+    --diff-added-surface: light-dark(#dcf0e2, #16301f);
+    --diff-added-ink: light-dark(#14532b, #a9dfba);
+    --diff-added-edge: light-dark(#8fce9f, #2f6b40);
+    --diff-removed-surface: light-dark(#f7dedf, #33191c);
+    --diff-removed-ink: light-dark(#6b1f24, #efb3b8);
+    --diff-removed-edge: light-dark(#e2a2a6, #75383d);
+}
+
+/* --------------------------------------------------------------------------
+   Dialog
+   -------------------------------------------------------------------------- */
+
+.dialog-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--gap-xl);
+    background: color-mix(in srgb, var(--scrim) 40%, transparent);
+    animation: dialog-fade var(--duration-short) var(--ease-standard);
+}
+
+@keyframes dialog-fade {
+    from {
+        opacity: 0;
+    }
+}
+
+.dialog {
+    display: flex;
+    flex-direction: column;
+    width: min(36rem, 100%);
+    max-height: min(86vh, 60rem);
+    background: var(--surface-container-high);
+    color: var(--on-surface);
+    border-radius: var(--shape-xl);
+    box-shadow: var(--elevation-3);
+    overflow: hidden;
+}
+
+.dialog.wide {
+    width: min(62rem, 100%);
+}
+
+.dialog__head {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-md);
+    flex: none;
+    padding: var(--gap-lg) var(--gap-lg) var(--gap-sm) var(--gap-xl);
+    color: var(--on-surface-variant);
+}
+
+.dialog__titles {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.dialog__titles .type-title {
+    color: var(--on-surface);
+}
+
+.dialog__subtitle {
+    color: var(--on-surface-variant);
+    overflow-wrap: anywhere;
+}
+
+.dialog__spacer {
+    flex: 1;
+}
+
+.dialog__body {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: var(--gap-sm) var(--gap-xl) var(--gap-md);
+}
+
+.dialog__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--gap-sm);
+    flex: none;
+    padding: var(--gap-md) var(--gap-xl) var(--gap-lg);
+    border-top: 1px solid var(--outline-variant);
+}
+
+.dialog__actions-note {
+    margin-right: auto;
+    color: var(--on-surface-variant);
+    font-size: var(--type-label-small-size);
+}
+
+/* --------------------------------------------------------------------------
+   Chip severities, shared by the status row and the dependency list
+   -------------------------------------------------------------------------- */
+
+.chip.warn {
+    background: var(--warning-container);
+    color: var(--on-warning-container);
+}
+
+.chip.bad {
+    background: var(--error-container);
+    color: var(--on-error-container);
+}
+
+.chip.good {
+    background: var(--secondary-container);
+    color: var(--on-secondary-container);
+}
+
+.chip.action {
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.chip.action:hover {
+    background: color-mix(in srgb, var(--on-surface) 14%, var(--surface-container-high));
+}
+
+/* --------------------------------------------------------------------------
+   The open-file status row, above the three panes
+   -------------------------------------------------------------------------- */
+
+.doc-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+    flex: none;
+    flex-wrap: wrap;
+    margin: var(--gap-sm) var(--gap-sm) 0;
+    padding: var(--gap-sm) var(--gap-md);
+    background: var(--surface-container-low);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--shape-md);
+}
+
+.doc-bar__name {
+    font-family: var(--font-mono);
+}
+
+.doc-bar__namespace {
+    color: var(--on-surface-variant);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 24rem;
+}
+
+.doc-bar__spacer {
+    flex: 1;
+}
+
+.doc-bar__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-xs);
+}
+
+/* --------------------------------------------------------------------------
+   Document panel — sections shared by namespaces, models, dependencies, aliases
+   -------------------------------------------------------------------------- */
+
+.doc-section + .doc-section {
+    margin-top: var(--gap-lg);
+    padding-top: var(--gap-md);
+    border-top: 1px solid var(--outline-variant);
+}
+
+.doc-section__head {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+    margin-bottom: var(--gap-xs);
+    color: var(--on-surface-variant);
+}
+
+.doc-section__title {
+    font-size: var(--type-label-size);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.doc-section__spacer {
+    flex: 1;
+}
+
+.doc-section__hint {
+    color: var(--on-surface-variant);
+    font-size: var(--type-label-small-size);
+    margin-bottom: var(--gap-xs);
+    display: block;
+}
+
+.doc-empty {
+    padding: var(--gap-sm) 0;
+    color: color-mix(in srgb, var(--on-surface-variant) 80%, transparent);
+    font-size: var(--type-body-small-size);
+}
+
+.doc-rows {
+    display: flex;
+    flex-direction: column;
+}
+
+.doc-entry + .doc-entry {
+    border-top: 1px solid color-mix(in srgb, var(--outline-variant) 60%, transparent);
+}
+
+.doc-row {
+    display: grid;
+    align-items: center;
+    gap: var(--gap-sm);
+    padding: var(--gap-xs) 0;
+}
+
+.doc-row .field__input.invalid {
+    border-color: var(--error);
+}
+
+.doc-row.namespace {
+    grid-template-columns: 2.75rem minmax(0, 1fr) auto auto;
+}
+
+.doc-row.alias {
+    grid-template-columns: minmax(6rem, 11rem) minmax(0, 1fr) auto auto;
+}
+
+.doc-row.required {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+}
+
+.doc-row__index {
+    color: var(--on-surface-variant);
+    font-size: var(--type-label-small-size);
+    text-align: right;
+}
+
+.doc-row__static {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: var(--type-body-small-size);
+}
+
+.doc-row__count {
+    justify-self: end;
+    white-space: nowrap;
+}
+
+.doc-note {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-xs);
+    padding: var(--gap-xs) 0;
+    color: var(--error);
+    font-size: var(--type-label-small-size);
+}
+
+.doc-users {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gap-xs);
+    padding-bottom: var(--gap-xs);
+}
+
+.doc-add {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--gap-sm);
+    padding-top: var(--gap-sm);
+}
+
+.doc-add .field {
+    flex: 1;
+}
+
+.doc-add__button {
+    flex: none;
+    margin-bottom: 1px;
+}
+
+/* Model entries */
+
+.doc-model {
+    padding: var(--gap-sm) var(--gap-md) var(--gap-md);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--shape-sm);
+    background: var(--surface-container-low);
+}
+
+.doc-model + .doc-model {
+    margin-top: var(--gap-sm);
+}
+
+.doc-model__head {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+    margin-bottom: var(--gap-xs);
+}
+
+.doc-model__index {
+    color: var(--on-surface-variant);
+    font-size: var(--type-label-small-size);
+}
+
+.doc-model__uri {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: var(--type-body-small-size);
+    font-weight: 500;
+}
+
+.doc-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: var(--gap-sm);
+}
+
+.doc-subhead {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+    margin-top: var(--gap-sm);
+    color: var(--on-surface-variant);
+    font-size: var(--type-label-small-size);
+    font-weight: 500;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+}
+
+/* Dependency status */
+
+.doc-dep {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-sm);
+    padding: var(--gap-xs) 0;
+    font-size: var(--type-body-small-size);
+}
+
+.doc-dep + .doc-dep {
+    border-top: 1px solid color-mix(in srgb, var(--outline-variant) 60%, transparent);
+}
+
+.doc-dep__icon {
+    flex: none;
+    color: var(--on-surface-variant);
+}
+
+.doc-dep.good .doc-dep__icon {
+    color: var(--primary);
+}
+
+.doc-dep.warn .doc-dep__icon {
+    color: var(--warning);
+}
+
+.doc-dep.bad .doc-dep__icon {
+    color: var(--error);
+}
+
+.doc-dep__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.doc-dep__title {
+    overflow-wrap: anywhere;
+}
+
+.doc-dep__detail {
+    color: var(--on-surface-variant);
+    font-size: var(--type-label-small-size);
+    overflow-wrap: anywhere;
+}
+
+/* --------------------------------------------------------------------------
+   Open-file report
+   -------------------------------------------------------------------------- */
+
+.report-counts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+    gap: var(--gap-sm);
+}
+
+.report-count {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--gap-sm);
+    border-radius: var(--shape-sm);
+    background: var(--surface-container-low);
+}
+
+.report-count__value {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: var(--type-title-size);
+}
+
+.report-count__label {
+    color: var(--on-surface-variant);
+    font-size: var(--type-label-small-size);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.report-verdict {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+    padding: var(--gap-sm) var(--gap-md);
+    margin-bottom: var(--gap-md);
+    border-radius: var(--shape-sm);
+    background: var(--secondary-container);
+    color: var(--on-secondary-container);
+    font-size: var(--type-body-small-size);
+}
+
+.report-verdict.warn {
+    background: var(--warning-container);
+    color: var(--on-warning-container);
+}
+
+.report-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: var(--gap-sm);
+    padding: var(--gap-xs) 0;
+    font-size: var(--type-body-small-size);
+}
+
+.report-item + .report-item {
+    border-top: 1px solid color-mix(in srgb, var(--outline-variant) 60%, transparent);
+}
+
+.report-item__what {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.report-item__kind {
+    color: var(--on-surface-variant);
+    font-size: var(--type-label-small-size);
+    margin-right: var(--gap-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.report-item__where {
+    justify-self: end;
+    white-space: nowrap;
+    color: color-mix(in srgb, var(--on-surface-variant) 85%, transparent);
+    font-size: var(--type-label-small-size);
+}
+
+.report-more {
+    padding-top: var(--gap-xs);
+    color: var(--on-surface-variant);
+    font-size: var(--type-label-small-size);
+}
+
+/* --------------------------------------------------------------------------
+   Diff preview
+   -------------------------------------------------------------------------- */
+
+.diff {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-md);
+}
+
+.diff__summary {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+    flex-wrap: wrap;
+}
+
+.diff__added {
+    color: var(--diff-added-ink);
+    font-weight: 500;
+}
+
+.diff__removed {
+    color: var(--diff-removed-ink);
+    font-weight: 500;
+}
+
+.diff__hunk {
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--shape-xs);
+    background: var(--surface);
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.diff__hunk-head {
+    position: sticky;
+    left: 0;
+    padding: 2px var(--gap-sm);
+    background: var(--surface-container);
+    color: var(--on-surface-variant);
+    font-family: var(--font-mono);
+    font-size: var(--type-label-small-size);
+    border-bottom: 1px solid var(--outline-variant);
+}
+
+.diff__line {
+    display: flex;
+    align-items: baseline;
+    min-width: max-content;
+    background: var(--surface);
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    font-size: var(--type-label-small-size);
+    line-height: 1.5;
+}
+
+.diff__line.added {
+    background: var(--diff-added-surface);
+    color: var(--diff-added-ink);
+}
+
+.diff__line.removed {
+    background: var(--diff-removed-surface);
+    color: var(--diff-removed-ink);
+}
+
+/* The gutter stays put while the line scrolls sideways, so it needs the line's own background. */
+.diff__gutter {
+    flex: none;
+    display: flex;
+    position: sticky;
+    left: 0;
+    background: inherit;
+    border-right: 2px solid transparent;
+    color: color-mix(in srgb, var(--on-surface-variant) 70%, transparent);
+}
+
+.diff__line.added .diff__gutter {
+    border-right-color: var(--diff-added-edge);
+    color: color-mix(in srgb, var(--diff-added-ink) 75%, transparent);
+}
+
+.diff__line.removed .diff__gutter {
+    border-right-color: var(--diff-removed-edge);
+    color: color-mix(in srgb, var(--diff-removed-ink) 75%, transparent);
+}
+
+.diff__num {
+    width: 3.5rem;
+    padding-right: var(--gap-sm);
+    text-align: right;
+    user-select: none;
+}
+
+.diff__sign {
+    flex: none;
+    width: 1.25rem;
+    padding-left: var(--gap-sm);
+    user-select: none;
+}
+
+.diff__text {
+    flex: 1;
+    white-space: pre;
+    padding-right: var(--gap-md);
+}
+
+.diff__truncated {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+    padding: var(--gap-sm) var(--gap-md);
+    border-radius: var(--shape-sm);
+    background: var(--warning-container);
+    color: var(--on-warning-container);
+    font-size: var(--type-body-small-size);
+}
+
+.diff__identical {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--gap-sm);
+    padding: var(--gap-xl) var(--gap-lg);
+    text-align: center;
+    color: var(--on-surface-variant);
+}
+
+.diff__identical .material-symbols-rounded {
+    font-size: 36px;
+    opacity: 0.6;
+}
+
+/* --------------------------------------------------------------------------
+   Small shared bits
+   -------------------------------------------------------------------------- */
+
+.dialog__body .field__input:read-only {
+    background: color-mix(in srgb, var(--on-surface) 4%, transparent);
+}
+
+.doc-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-md);
+}

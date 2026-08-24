@@ -22,10 +22,19 @@ uanedit = { path = "uanedit", default-features = false }
 # dependency-free, and builds for wasm.
 base64 = { version = "0.22", default-features = false, features = ["std"] }
 derive_more = { version = "2", features = ["display", "from", "into"] }
-# Pinned to the `dx` in the Nix dev shell — dioxus-cli and dioxus must agree.
-dioxus = "0.7.9"
+# Pinned to the `dx` in the Nix dev shell — dioxus-cli and dioxus must agree, and `dx` refuses to
+# build when the library is newer than itself, so the `=` is load-bearing.
+dioxus = "=0.7.9"
 serde = { version = "1", features = ["derive"] }
 thiserror = "2"
+
+# The acknowledgements sidecar beside each nodeset. Server-only: the browser gets the
+# acknowledgements in the open payload and never reads the file.
+serde_json = "1"
+# The diff behind "preview before save" (features.md §2E). Server-only, because the server already
+# holds both the loaded bytes and the would-be output and shipping both to diff them would cost
+# more than the answer.
+similar = "2"
 
 # The NodeSet2 codec. A pull parser and an explicit writer rather than serde
 # derives: a UANodeSet round trip has to preserve element order and unknown

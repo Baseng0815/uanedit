@@ -35,6 +35,27 @@ pub struct NodeHeader {
     pub release_status: ReleaseStatus,
     /// Attributes from a schema revision this crate does not know, kept so a save does not drop them.
     pub unknown_attributes: IndexMap<String, String>,
+    /// Child elements this crate does not model, kept for the same reason, each in its place.
+    pub unknown_elements: Vec<UnknownChild>,
+    /// Which of the optional child elements the document wrote out empty, which is not the same as
+    /// leaving them out.
+    pub empty_children: EmptyChildren,
+}
+
+/// A child element this crate does not model, kept with its place among the ones it does.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct UnknownChild {
+    pub element: XmlElement,
+    /// How many children this crate models came before it.
+    pub after: usize,
+}
+
+/// Child elements a document wrote as empty ones rather than leaving out.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct EmptyChildren {
+    pub references: bool,
+    pub role_permissions: bool,
+    pub extensions: bool,
 }
 
 /// What the four instance classes carry on top of [`NodeHeader`] (UANodeSet `UAInstance`).

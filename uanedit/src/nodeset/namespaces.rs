@@ -12,6 +12,12 @@ use crate::types::node_id::NamespaceIndex;
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NamespaceTable(Vec<String>);
 
+impl From<Vec<String>> for NamespaceTable {
+    fn from(uris: Vec<String>) -> Self {
+        Self(uris)
+    }
+}
+
 impl NamespaceTable {
     pub fn new(uris: Vec<String>) -> Self {
         Self(uris)

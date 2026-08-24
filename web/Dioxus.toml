@@ -1,0 +1,5 @@
+[application]
+name = "uanedit"
+
+[web.app]
+title = "uanedit"

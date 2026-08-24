@@ -16,6 +16,17 @@ serde = { workspace = true }
 # therefore needs `Serialize` and `Deserialize`.
 uanedit = { workspace = true }
 
+# The filesystem side only, so neither ends up in the browser bundle.
+serde_json = { workspace = true, optional = true }
+similar = { workspace = true, optional = true }
+thiserror = { workspace = true, optional = true }
+
+# The one timer the browser half needs: debouncing the tree's search box and
+# retiring a status message. Already in the tree under `dioxus-web`, so it costs
+# the bundle nothing new.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+gloo-timers = { version = "0.3", features = ["futures"] }
+
 [features]
 default = ["web"]
 # Client half: compiled for wasm32-unknown-unknown by `dx serve`.
@@ -24,6 +35,9 @@ web = ["dioxus/web"]
 server = [
     "dioxus/server",
     "uanedit/xml",
+    "dep:serde_json",
+    "dep:similar",
+    "dep:thiserror",
 ]
 
 [lints]

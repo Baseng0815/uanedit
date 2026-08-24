@@ -16,8 +16,10 @@
 # local environment overrides
 .env
 
-# the nodeset workspace `dx serve` opens by default
+# the nodeset workspace. `dx serve` runs the server with `web/` as its working directory, so the
+# default `./workspace` lands there; a deployed binary run from the repo root uses the first.
 /workspace/
+/web/workspace/
 
 # claude code personal settings
 .claude/settings.local.json

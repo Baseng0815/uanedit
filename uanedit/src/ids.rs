@@ -27,6 +27,8 @@ pub const NUMBER: NodeId = base(26);
 pub const INTEGER: NodeId = base(27);
 pub const UINTEGER: NodeId = base(28);
 pub const ENUMERATION: NodeId = base(29);
+/// The DataType of the InputArguments and OutputArguments Properties of a Method.
+pub const ARGUMENT: NodeId = base(296);
 pub const UNION: NodeId = base(12756);
 
 pub const REFERENCES: NodeId = base(31);
@@ -46,7 +48,10 @@ pub const HAS_PROPERTY: NodeId = base(46);
 pub const HAS_COMPONENT: NodeId = base(47);
 pub const HAS_NOTIFIER: NodeId = base(48);
 pub const HAS_ORDERED_COMPONENT: NodeId = base(49);
+pub const ALWAYS_GENERATES_EVENT: NodeId = base(3065);
 
+pub const DATA_TYPE_ENCODING_TYPE: NodeId = base(76);
+pub const MODELLING_RULE_TYPE: NodeId = base(77);
 pub const BASE_OBJECT_TYPE: NodeId = base(58);
 pub const FOLDER_TYPE: NodeId = base(61);
 pub const BASE_VARIABLE_TYPE: NodeId = base(62);

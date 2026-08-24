@@ -44,6 +44,39 @@
           }
         );
 
+        # `dx`'s nixpkgs wrapper appends wasm-bindgen-cli 0.2.118 to PATH, but
+        # wasm-bindgen aborts unless the CLI's version equals the crate version
+        # Cargo.lock pins. The shell carries its own, ahead of the wrapper's.
+        wasmBindgenVersion = "0.2.127";
+
+        wasmBindgenCli =
+          let
+            cli = pkgs.buildWasmBindgenCli rec {
+              src = pkgs.fetchCrate {
+                pname = "wasm-bindgen-cli";
+                version = wasmBindgenVersion;
+                hash = "sha256-di+qBAdd7pENLiIB9CoZoab+W5xeDoByMREcCGTSzWo=";
+              };
+              cargoDeps = pkgs.rustPlatform.fetchCargoVendor {
+                inherit src;
+                inherit (src) pname version;
+                hash = "sha256-FTv2GZIAQs0ePdIZXIXil7JbZ6kIT05VG6vqC1qNFxQ=";
+              };
+            };
+            lines = pkgs.lib.splitString "\n" (builtins.readFile ./Cargo.lock);
+            index = pkgs.lib.lists.findFirstIndex (l: l == ''name = "wasm-bindgen"'') null lines;
+            locked =
+              if index == null then
+                wasmBindgenVersion
+              else
+                pkgs.lib.removeSuffix ''"'' (
+                  pkgs.lib.removePrefix ''version = "'' (builtins.elemAt lines (index + 1))
+                );
+          in
+          pkgs.lib.warnIf (locked != wasmBindgenVersion)
+            "flake.nix pins wasm-bindgen-cli ${wasmBindgenVersion}, Cargo.lock pins wasm-bindgen ${locked} — bump wasmBindgenVersion and both hashes."
+            cli;
+
         # Single knob for the shell's LLVM/clang version (stdenv, tools).
         llvmPackages = pkgs.llvmPackages;
       in
@@ -53,6 +86,7 @@
             with pkgs;
             [
               rustToolchain
+              wasmBindgenCli
               dioxus-cli
               pkg-config
               cmake

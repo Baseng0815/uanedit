@@ -16,7 +16,7 @@ use crate::types::node_id_ref::NodeIdRef;
 use crate::types::variant::Variant;
 
 /// A Variable node (OPC 10000-3 §5.6).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Variable {
     pub header: NodeHeader,
     pub instance: InstanceHeader,
@@ -27,8 +27,30 @@ pub struct Variable {
     pub array_dimensions: ArrayDimensions,
     pub access_level: AccessLevel,
     pub user_access_level: AccessLevel,
+    #[serde(with = "crate::types::real::double")]
     pub minimum_sampling_interval: f64,
     pub historizing: bool,
+}
+
+/// `MinimumSamplingInterval` may be NaN, which does not equal itself; comparing its bits keeps a
+/// node that nobody edited comparing equal to the file it came from.
+impl PartialEq for Variable {
+    fn eq(
+        &self,
+        other: &Self,
+    ) -> bool {
+        self.minimum_sampling_interval.to_bits() == other.minimum_sampling_interval.to_bits()
+            && self.header == other.header
+            && self.instance == other.instance
+            && self.value == other.value
+            && self.translations == other.translations
+            && self.data_type == other.data_type
+            && self.value_rank == other.value_rank
+            && self.array_dimensions == other.array_dimensions
+            && self.access_level == other.access_level
+            && self.user_access_level == other.user_access_level
+            && self.historizing == other.historizing
+    }
 }
 
 impl Default for Variable {

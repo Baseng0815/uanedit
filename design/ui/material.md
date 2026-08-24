@@ -1,7 +1,10 @@
 # Visual direction — Material 3
 
-Status: direction agreed at project setup (2026-08-23). Nothing is built yet;
-the token values below are a starting point to tune on sight, not a decision.
+Status: direction agreed at project setup (2026-08-23); built 2026-08-24. The
+token values below survived contact with the screen unchanged and are the ones
+in `web/assets/main.css`, which carries the rest of the scale — state layers,
+elevation, motion, type, density — beside them. §5 records what building them
+settled.
 
 ## 1. Decisions
 
@@ -75,6 +78,15 @@ Provisional: M3 navigation rail on the left for workspace-level destinations
 (files, validation, settings), top app bar carrying the open file name and the
 save state, panes below. Nothing about this is settled.
 
+**As built.** Exactly that. The rail holds Files, with Validation and Settings
+present and disabled — validation lives in the editor's right pane, so the
+destination is a placeholder rather than a duplicate. The app bar carries the
+brand, the open file with a dirty dot, a transient status message, and the
+undo / redo / diff / save actions. The three panes are address-space tree,
+inspector, and a tabbed right pane (References, Validation); the open-file
+report, the diff preview, the version nudge and the wizards are dialogs over
+them rather than a fourth pane.
+
 ## 4. Color as meaning
 
 The one rule to hold: **blue is interactive, everything else is semantic.**
@@ -94,9 +106,44 @@ attributes; they are scanned in columns.
 
 1. The three-pane layout above the tablet breakpoint, and what it collapses to
    below it. A tree/inspector split has no obvious phone form.
-2. Whether the tree is virtualised from the start. The standard nodeset is
-   ~35 000 nodes, so probably yes, which constrains how it can be styled.
+   *Resolved 2026-08-24: two breakpoints, and no phone form is attempted.*
+   Below 1100 px the right pane is dropped and the tree narrows; below 760 px
+   the remaining two stack into one scrolling column. The editor is a desktop
+   tool and degrades rather than reflowing into something unusable. What a
+   narrow viewport does about the references and validation the dropped pane
+   held is not answered — it is hidden, not relocated.
+
+2. Whether the tree is virtualised from the start.
+   *Resolved 2026-08-24: yes, virtualised, and never built any other way.*
+   Rows are a fixed 26 px (`--row-height-dense`), which is what makes the
+   arithmetic
+   possible: scroll offset divided by row height gives the first visible row,
+   ten rows of overscan on each side, and only that window is rendered. The
+   fixed height is a real constraint on styling — a row cannot grow to fit its
+   content, so anything that does not fit is elided or moved to the inspector —
+   and it is worth it: the standard nodeset is tens of thousands of nodes and
+   flattening the whole graph into DOM is not an option.
+
 3. Icon set for the eight node classes — Material Symbols has no OPC UA
    vocabulary, so these are analogies that need choosing deliberately.
-4. Density. M3's defaults are touch-sized; a nodeset tree wants to be tighter.
-   Likely a compact density override rather than fighting each component.
+   *Chosen 2026-08-24* (`web/src/views/editor/icons.rs`), for distinct
+   silhouettes at 18 px and for pairing an instance class with the class that
+   types it:
+
+   | Class         | Symbol            | Reading                                                |
+   | ------------- | ----------------- | ------------------------------------------------------ |
+   | Object        | `deployed_code`   | a solid box — a thing that exists in the address space  |
+   | ObjectType    | `category`        | the classifier those things are sorted into            |
+   | Variable      | `label`           | a tag: a named value hung on something                 |
+   | VariableType  | `sell`            | the same tag drawn hollow — the template of a value     |
+   | Method        | `function`        | `f(x)`: the one node class you call                    |
+   | View          | `visibility`      | a chosen way of looking at the graph                   |
+   | DataType      | `data_object`     | `{ }`: the shape a value takes                         |
+   | ReferenceType | `arrow_right_alt` | the arrow itself                                       |
+
+4. Density. *Resolved 2026-08-24: a compact override on the tokens, as
+   expected, and no component fought.* The scale in `main.css`: 52 px app bar,
+   76 px navigation rail, 36 px pane headers, 40 px ordinary rows, 26 px tree
+   and table rows, and a 4/8/12/16/24 px gap scale. Body text is 0.875 rem,
+   small body 0.75 rem. Every M3 component here is written against those
+   custom properties, so density is one block to change rather than a sweep.

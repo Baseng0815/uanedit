@@ -87,17 +87,24 @@ impl fmt::Display for QualifiedName {
         &self,
         f: &mut fmt::Formatter<'_>,
     ) -> fmt::Result {
-        if self.namespace_index != 0 || self.explicit_index {
+        if self.namespace_index != 0 || self.explicit_index || starts_with_index(&self.name) {
             write!(f, "{}:", self.namespace_index)?;
         }
         f.write_str(&self.name)
     }
 }
 
+/// A name that would be read back as an index if the index were left off.
+fn starts_with_index(name: &str) -> bool {
+    name.split_once(':')
+        .is_some_and(|(prefix, _)| !prefix.is_empty() && prefix.bytes().all(|digit| digit.is_ascii_digit()))
+}
+
 impl FromStr for QualifiedName {
     type Err = ParseError;
 
-    /// A leading `<digits>:` is the namespace index; any other colon belongs to the name.
+    /// A leading `<digits>:` is the namespace index; any other colon — including one behind digits
+    /// that no namespace table could ever be that long — belongs to the name.
     fn from_str(text: &str) -> Result<Self, Self::Err> {
         let Some((prefix, name)) = text.split_once(':') else {
             return Ok(Self::new(0, text));
@@ -105,9 +112,9 @@ impl FromStr for QualifiedName {
         if !prefix.bytes().all(|digit| digit.is_ascii_digit()) || prefix.is_empty() {
             return Ok(Self::new(0, text));
         }
-        let namespace_index = prefix
-            .parse()
-            .map_err(|_| ParseError::QualifiedName(text.to_owned()))?;
+        let Ok(namespace_index) = prefix.parse() else {
+            return Ok(Self::new(0, text));
+        };
         Ok(Self {
             namespace_index,
             name: name.to_owned(),

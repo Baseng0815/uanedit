@@ -17,8 +17,10 @@ pub mod variable_type;
 pub mod view;
 
 pub use common::{
+    EmptyChildren,
     InstanceHeader,
     NodeHeader,
+    UnknownChild,
 };
 pub use data_type::{
     DataType,

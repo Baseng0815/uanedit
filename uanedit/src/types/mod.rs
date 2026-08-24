@@ -12,6 +12,7 @@ pub mod localized_text;
 pub mod node_id;
 pub mod node_id_ref;
 pub mod qualified_name;
+pub(crate) mod real;
 pub mod status_code;
 pub mod variant;
 pub mod xml;
