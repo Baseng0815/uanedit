@@ -90,10 +90,13 @@ and the delivery, separate files or one ZIP. Its file list doubles as the
 preview: View generates the files, after which a name opens a highlighted
 preview dialog over the export and the arrow beside it opens the raw text in a
 tab. That dialog is the one `full` variant — widest, no body padding, the code
-on the surface itself rather than in a bordered box inside it, and sized to its
-content up to a cap so a nineteen-line file is not a mostly empty window. Type
-size is a control rather than a constant: 12px by default, 9 to 22 from the
-zoom cluster, held by the export dialog so it survives switching between files.
+on the surface itself behind hairline side rules rather than in a bordered box
+inside it, and sized to its content up to a cap so a nineteen-line file is not
+a mostly empty window. Line numbers are a second `pre` beside the code, sharing
+its type size and line height so the line boxes match, sticky to the left so
+they hold while the code scrolls sideways under them. Type size is a control
+rather than a constant: 12px by default, 9 to 22 from the zoom cluster, held by
+the export dialog so it survives switching between files.
 The syntax theme is chosen in Rust from the app's own override rather than
 `prefers-color-scheme`, so a light theme forced on a dark system does not leave
 a dark code block behind. Nothing touches disk. The three panes are address-space tree,

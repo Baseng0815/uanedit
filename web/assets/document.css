@@ -700,9 +700,13 @@
 /* The highlighter brings its own colours; the scrolling is ours, because the
    gutter has to stay put while the code moves under it sideways. One monospace
    stack for both children, so a line box is the same height in each. */
+/* `flex-start`, not the default stretch: stretch would cap both children at the
+   visible height and let their real content spill out of their own boxes, so
+   the gutter's background would cover nothing and the code would scroll
+   straight through the numbers. `min-height` fills the frame for a short file. */
 .preview {
     display: flex;
-    align-items: stretch;
+    align-items: flex-start;
     min-height: 0;
     height: 100%;
     overflow: auto;
@@ -718,6 +722,7 @@
        through the numbers rather than under them. */
     z-index: 1;
     flex: none;
+    min-height: 100%;
     margin: 0;
     padding: var(--gap-md) var(--gap-sm);
     border-right: 1px solid var(--outline-variant);
@@ -734,11 +739,22 @@
    belongs to `.preview`, so the code keeps its own width. */
 .preview .dxc {
     flex: 1 0 auto;
+    min-height: 100%;
     overflow: visible;
     border-radius: 0;
     padding: var(--gap-md) var(--gap-xl);
     font-size: var(--preview-type-size, 12px);
     line-height: 1.5;
+}
+
+/* The `<code>` the highlighter nests inside its `<pre>` carries the browser's
+   own `font-family: monospace`, whose metrics are not the stack above it — left
+   alone it makes the code's line boxes taller than the gutter's, and the
+   numbers drift a pixel or two per line away from their code. */
+.preview .dxc code,
+.preview .dxc span {
+    font-family: inherit;
+    font-size: inherit;
 }
 
 .preview__zoom {
